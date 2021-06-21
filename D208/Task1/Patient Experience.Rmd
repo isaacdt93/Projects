@@ -1,0 +1,78 @@
+---
+title: "D208"
+author: "Dillon Isaacson"
+date: "March 2, 2021"
+output:
+  html_document:
+    keep_md: TRUE
+    TOC_float: TRUE
+    code_folding: hide
+    theme: cerulean
+    fig.height: 12
+    fig.width: 12
+    message: 'no'
+    warning:  'no'
+    alignment: center
+---
+
+```{r setup, include=FALSE}
+library(mosaic)
+library(tidyverse)
+library(janitor)
+library(pander)
+library(ISLR)
+library(ggplot2)
+library(gridExtra)
+
+raw_data <- read.csv("C:/Users/Dillon/Desktop/WGU Classes/WGU_classes/D208/Task1/medical_clean.csv") %>% 
+  clean_names()
+
+test <- raw_data %>% select(initial_days, item1:item8)
+
+```
+
+## R Markdown
+
+```{r}
+sample <- test[1:7000,]
+```
+
+```{r}
+pander(fav_stats(sample$initial_days))
+pander(fav_stats(sample$item1))
+pander(fav_stats(sample$item2))
+pander(fav_stats(sample$item3))
+pander(fav_stats(sample$item4))
+pander(fav_stats(sample$item5))
+pander(fav_stats(sample$item6))
+pander(fav_stats(sample$item7))
+pander(fav_stats(sample$item8))
+```
+
+```{r}
+
+test.lm <- lm(initial_days ~ item1 + item2 + item3 + item4 + item5 + item6 + item7 + item8, data = sample)
+
+```
+
+```{r}
+pander(summary(test.lm))
+plot(test.lm, which = 1:3)
+
+```
+
+```{r}
+
+test2.lm <- lm(initial_days ~ item1 + item4 + item5 + item6 + item7 + item8, data = sample)
+
+```
+
+```{r}
+pander(summary(test2.lm))
+plot(test2.lm, which = 1:3)
+
+```
+
+$$
+y = 22.48-0.7501X_{item1}+0.4159_{item7}
+$$

@@ -1,0 +1,126 @@
+---
+title: "D206"
+author: "Dillon Isaacson"
+date: "February 18, 2021"
+output:
+  html_document:
+    keep_md: TRUE
+    TOC_float: TRUE
+    code_folding: hide
+    theme: cerulean
+    fig.height: 12
+    fig.width: 12
+    message: 'no'
+    warning:  'no'
+    alignment: center
+---
+
+```{r setup, include=FALSE}
+library(mosaic)
+library(tidyverse)
+library(janitor)
+library(pander)
+
+#library(DT)
+#library(smbinning)
+#library(plyr)
+#library(corrplot)
+library(ggplot2)
+library(gridExtra)
+#library(ggthemes)
+#library(caret)
+#library(MASS)
+#library(randomForest)
+#library(party)
+
+raw_data <- read.csv("C:/Users/Dillon/Desktop/WGU Classes/WGU_classes/D206/medical_raw_data.csv")
+
+raw_data$Soft_drink[is.na(raw_data$Soft_drink)] <- "No"
+raw_data[is.na(raw_data)] <- 0
+  
+clean_data <- raw_data %>% 
+  clean_names()
+
+work_data <- clean_data %>% 
+  select(re_admis, high_blood:asthma) %>% 
+  mutate(overweight2 = case_when(
+    overweight == 0 ~ 'No',
+    overweight == 1 ~ 'Yes')
+  ,
+  anxiety2 = case_when(
+    anxiety == 0 ~ "No",
+    anxiety == 1 ~ "Yes")
+  ,
+  high_blood2 = case_when(
+    high_blood == "No" ~ 0,
+    high_blood == "Yes" ~ 1)
+  ,
+  stroke2 = case_when(
+    stroke == "No" ~ 0,
+    stroke == "Yes" ~ 1)
+  ,
+  complication_risk2 = case_when(
+    complication_risk == "Low" ~ 0,
+    complication_risk == "Medium" ~ 1,
+    complication_risk == "High" ~ 3)
+  ,
+  arthritis2 = case_when(
+    arthritis == "No" ~ 0,
+    arthritis == "Yes" ~ 1)
+  ,
+  diabetes2 = case_when(
+    diabetes == "No" ~ 0,
+    diabetes == "Yes" ~ 1)
+  ,
+  hyper_lipdemia2 = case_when(
+    hyperlipidemia == "No" ~ 0,
+    hyperlipidemia == "Yes" ~ 1)
+  ,
+  back_pain2 = case_when(
+    back_pain == "No" ~ 0,
+    back_pain == "Yes" ~ 1)
+  ,
+  allergici_rhinitis2 = case_when(
+    allergic_rhinitis == "No" ~ 0,
+    allergic_rhinitis == "Yes" ~ 1)
+  ,
+  reflux2 = case_when(
+    reflux_esophagitis == "No" ~ 0,
+    reflux_esophagitis == "Yes" ~ 1)
+  ,
+  asthma2 = case_when(
+    asthma == "No" ~ 0,
+    asthma == "Yes" ~ 1)
+  ) %>% 
+  filter(re_admis == 'Yes')
+
+work_data$re_admis <- as.factor(work_data$re_admis)
+work_data$high_blood <- as.factor(work_data$high_blood)
+work_data$stroke <- as.factor(work_data$stroke)
+work_data$complication_risk <- as.factor(work_data$complication_risk)
+work_data$arthritis <- as.factor(work_data$arthritis)
+work_data$diabetes <- as.factor(work_data$diabetes)
+work_data$hyperlipidemia <- as.factor(work_data$hyperlipidemia)
+work_data$back_pain <- as.factor(work_data$back_pain)
+work_data$allergic_rhinitis <- as.factor(work_data$allergic_rhinitis)
+work_data$reflux_esophagitis <- as.factor(work_data$reflux_esophagitis)
+work_data$asthma <- as.factor(work_data$asthma)
+work_data$overweight2 <- as.factor(work_data$overweight2)
+work_data$anxiety2 <- as.factor(work_data$anxiety2)
+
+clean_data <- write.csv(clean_data,"C:/Users/Dillon/Desktop/WGU Classes/WGU_classes/D206/medical_clean_data.csv")
+```
+
+## PCA
+
+```{r}
+work.pca <- prcomp(work_data[,c(5,10,16:25)], center = TRUE, scale. = TRUE)
+
+(summary(work.pca))
+
+screeplot(work.pca, type = "lines")
+abline(1,0)
+```
+
+
+

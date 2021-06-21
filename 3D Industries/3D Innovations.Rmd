@@ -1,0 +1,363 @@
+---
+title: "3D Innovations"
+author: "Dillon Isaacson"
+date: "April 5, 2019"
+output:
+  flexdashboard::flex_dashboard:
+    theme: cerulean
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(janitor)
+library(readr)
+library(pander)
+library(DT)
+library(grid)
+library(lubridate)
+library(RColorBrewer)
+
+serial_raw <-read_csv("C:/Users/Dillon/Desktop/BYU-I Classes/Math 335/Git/M335_WI19_Isaacson_Dill/Case_Study_13/analysis/serial_numbers.csv", na = c("", ""))
+
+serial <- serial_raw %>% 
+  clean_names() %>% 
+  mutate(model = case_when(
+    str_detect(serial_number, "mp") | str_detect(serial_number, "l") | str_detect(comments, "Mini")~ "Mini/Lite",
+    str_detect(serial_number, "MP") | str_detect(serial_number, "L") | str_detect(comments, "Lite")~ "Mini/Lite",
+    str_detect(serial_number, "p") | str_detect(serial_number, "P") | str_detect(comments, "Pro") ~ "Pro",
+    !is.na(serial_number) & !serial_number == "----" | str_detect(comments, "Standard")  ~ "Standard" ,
+    T ~ "Fix Me"
+  ),
+  size = case_when(
+    str_detect(serial_number, "(?<=[1-12])5") | str_detect(comments,"5") ~ "5",
+    str_detect(serial_number, "(?<=[1-12])6") | str_detect(comments,"6") ~ "6",
+    str_detect(serial_number, "(?<=[1-12])7") | str_detect(comments,"7") ~ "7",
+    str_detect(serial_number, "(?<=[1-12])8") | str_detect(comments,"8") ~ "8",
+    str_detect(serial_number, "(?<=[1-12])9") | str_detect(comments,"9") ~ "9",
+    str_detect(serial_number, "(?<=[1-12])10") | str_detect(comments,"10") ~ "10",
+    T ~ "Check"
+  ),
+  tongue = case_when(
+    str_detect(comments, "tongue") | str_detect(comments, "Tongue") ~ "Yes",
+    T ~ "No"
+  ),
+  edger = case_when(
+    str_detect(comments, "edge") | str_detect(comments, "Edge") ~ "Yes",
+    T ~ "No"
+  ),
+  order_month = month(as_date(mdy(date_of_order))),
+  order_year = year(as_date(mdy(date_of_order))))
+
+```
+
+#Models Historic{.tabset}
+
+Column
+-------------------------------------
+
+###
+
+```{r, warning = F}
+standard_monthly <- serial %>%
+  filter(model == "Standard") %>% 
+  group_by(model, order_month, order_year) %>% 
+  summarize(count = n())
+
+standard_monthly %>% 
+  drop_na(order_year) %>% 
+  drop_na(order_month) %>% 
+  ggplot(aes(x = as_factor(order_month), y = count, colour = as.factor(order_year))) +
+  geom_jitter(width = .55, height = 0) + 
+  scale_color_brewer(palette = "Paired") +
+  theme_bw() +
+  xlab("Order Month") + 
+  ylab("Number Sold") +
+  labs(title = "Standard Groomers Sold", subtitle = "Including 2019 Sales", colour = "Order Year")
+```
+
+Column
+-------------------------------------
+###
+
+```{r, warning = F}
+pro_monthly <- serial %>%
+  filter(model == "Pro") %>% 
+  group_by(model, order_month, order_year) %>% 
+  summarize(count = n())
+
+pro_monthly %>% 
+  drop_na(order_year) %>% 
+  drop_na(order_month) %>% 
+  ggplot(aes(x = as_factor(order_month), y = count, colour = as.factor(order_year))) +
+  geom_jitter(width = .55, height = 0) + 
+  scale_color_brewer(palette = "Paired") +
+  theme_bw() +
+  xlab("Order Month") + 
+  ylab("Number Sold") +
+  labs(title = "Pro Groomers Sold", subtitle = "Including 2019 Sales", colour = "Order Year")
+```
+
+Column
+-------------------------------------
+
+###
+
+```{r, warning = F}
+mini_lite_monthly <- serial %>%
+  filter(model == "Mini/Lite") %>% 
+  group_by(model, order_month, order_year) %>% 
+  summarize(count = n())
+
+mini_lite_monthly %>% 
+  drop_na(order_year) %>% 
+  drop_na(order_month) %>% 
+  ggplot(aes(x = as_factor(order_month), y = count, colour = as.factor(order_year))) +
+  geom_jitter(width = .55, height = 0) + 
+  scale_color_brewer(palette = "Paired") +
+  theme_bw() +
+  xlab("Order Month") + 
+  ylab("Number Sold") +
+  labs(title = "Mini/Pro-Lite Groomers Sold", subtitle = "Including 2019 Sales", colour = "Order Year")
+```
+
+# Lifetime Sales
+
+##
+
+###
+
+```{r, warning = FALSE, echo = FALSE}
+#datatable(serial)
+
+yearly <- serial %>%
+  filter(!model %in% "Fix Me") %>% 
+  group_by(model, order_year) %>% 
+  summarize(count = n()) 
+
+yearly %>% 
+  drop_na(order_year) %>% 
+  ggplot(aes(x = as_factor(order_year), y = count, colour = model)) +
+  geom_jitter(width = .15, height = 0) +
+  scale_color_brewer(palette = "Paired") +
+  theme_bw() +
+  xlab("Order Year") + 
+  ylab("Number Sold") +
+  labs(title = "Groomer Sales", subtitle = "By Year and Groomer Type", colour = "Model")
+```
+
+##
+
+### Standards since 2016
+
+```{r}
+stand_sold <- sum(standard_monthly$count)
+flexdashboard::valueBox(stand_sold)
+```
+
+### Pros since 2016
+
+```{r}
+pro_sold <- sum(pro_monthly$count)
+flexdashboard::valueBox(pro_sold)
+```
+
+### Mini/Pro-Lite since 2016
+
+```{r}
+ml_sold <- sum(mini_lite_monthly$count)
+flexdashboard::valueBox(ml_sold)
+```
+
+# Standard Sales
+
+Column
+-------------------------------------
+
+### 5 Foot
+
+```{r, warning = F}
+standard <- serial %>%
+  filter(model == "Standard") %>% 
+  group_by(size) %>% 
+  summarize(count = n())
+```
+
+```{r}
+stan_5 <- standard$count[1]
+flexdashboard::valueBox(stan_5)
+```
+
+### 6 Foot
+```{r}
+stan_6 <- standard$count[2]
+flexdashboard::valueBox(stan_6)
+```
+
+### 7 Foot
+```{r}
+stan_7 <- standard$count[3]
+flexdashboard::valueBox(stan_7)
+```
+
+Column
+-------------------------------------
+
+```{r}
+acces <- serial %>%
+  filter(model == "Standard") %>% 
+  group_by(tongue, edger) %>% 
+  summarize(count = n())
+```
+
+### No Tongue or Edger
+```{r}
+none <- acces$count[1]
+flexdashboard::valueBox(none)
+```
+
+### Tongue No Edger
+```{r}
+tong <- acces$count[2]
+flexdashboard::valueBox(tong)
+```
+
+### Edger No Tongue
+```{r}
+edge <- acces$count[3]
+flexdashboard::valueBox(edge)
+```
+
+### Tongue and Edger
+```{r}
+both <- acces$count[4]
+flexdashboard::valueBox(both)
+```
+
+# Pro Sales
+
+Column
+-------------------------------------
+
+```{r, warning = F}
+pro <- serial %>%
+  filter(model == "Pro") %>% 
+  group_by(size) %>% 
+  summarize(count = n())
+```
+
+### 6 Foot
+```{r}
+pro_6 <- pro$count[1]
+flexdashboard::valueBox(pro_6)
+```
+
+### 7 Foot
+```{r}
+pro_7 <- pro$count[2]
+flexdashboard::valueBox(pro_7)
+```
+
+### 8 Foot
+```{r}
+pro_8 <- pro$count[3]
+flexdashboard::valueBox(pro_8)
+```
+
+Column
+-------------------------------------
+
+```{r}
+acces2 <- serial %>%
+  filter(model == "Pro") %>% 
+  group_by(tongue, edger) %>% 
+  summarize(count = n())
+```
+
+### No Tongue or Edger
+```{r}
+none2 <- acces2$count[1]
+flexdashboard::valueBox(none2)
+```
+
+### Tongue No Edger
+```{r}
+tong2 <- acces2$count[2]
+flexdashboard::valueBox(tong2)
+```
+
+### Edger No Tongue
+```{r}
+edge2 <- acces2$count[3]
+flexdashboard::valueBox(edge2)
+```
+
+### Tongue and Edger
+```{r}
+both2 <- acces2$count[4]
+flexdashboard::valueBox(both2)
+```
+
+# Mini/Pro Lite Sales
+
+Column
+-------------------------------------
+
+### 5 Foot
+
+```{r, warning = F}
+ml <- serial %>%
+  filter(model == "Mini/Lite") %>% 
+  group_by(size) %>% 
+  summarize(count = n())
+```
+
+```{r}
+ml_5 <- ml$count[1]
+flexdashboard::valueBox(ml_5)
+```
+
+### 6 Foot
+```{r}
+ml_6 <- ml$count[2]
+flexdashboard::valueBox(ml_6)
+```
+
+### 7 Foot
+```{r}
+ml_7 <- ml$count[3]
+flexdashboard::valueBox(ml_7)
+```
+
+Column
+-------------------------------------
+
+```{r}
+acces3 <- serial %>%
+  filter(model == "Mini/Lite") %>% 
+  group_by(tongue, edger) %>% 
+  summarize(count = n())
+```
+
+### No Tongue or Edger
+```{r}
+none3 <- acces3$count[1]
+flexdashboard::valueBox(none3)
+```
+
+### Tongue No Edger
+```{r}
+tong3 <- acces3$count[2]
+flexdashboard::valueBox(tong3)
+```
+
+### Edger No Tongue
+```{r}
+edge3 <- acces3$count[3]
+flexdashboard::valueBox(edge3)
+```
+
+### Tongue and Edger
+```{r}
+both3 <- acces$count[4]
+flexdashboard::valueBox(both3)
+```

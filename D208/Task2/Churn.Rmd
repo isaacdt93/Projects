@@ -1,0 +1,140 @@
+---
+title: "D208"
+author: "Dillon Isaacson"
+date: "April 13, 2021"
+output:
+  html_document:
+    keep_md: TRUE
+    TOC_float: TRUE
+    code_folding: hide
+    theme: cerulean
+    fig.height: 12
+    fig.width: 12
+    message: 'no'
+    warning:  'no'
+    alignment: center
+---
+
+```{r setup, include=FALSE}
+library(mosaic)
+library(tidyverse)
+library(janitor)
+library(pander)
+library(ISLR)
+library(ggplot2)
+library(gridExtra)
+library(Amelia)
+library(mlbench)
+
+raw_data <- read.csv("C:/Users/Dillon/Desktop/WGU Classes/WGU_classes/D208/Task2/churn_clean.csv") %>% 
+  clean_names()
+
+clean <- raw_data %>% select(churn, income, age, outage_sec_perweek, multiple, online_security, online_backup, device_protection, tech_support, streaming_tv, streaming_movies, yearly_equip_failure, paperless_billing) %>%
+  mutate(churn2 = case_when(
+    churn == "Yes" ~ 1,
+    churn == "No" ~ 0)
+  ,multiple2 = case_when(
+    multiple == "Yes" ~ 1,
+    multiple == "No" ~ 0
+    ),online_security2 = case_when(
+    online_security == "Yes" ~ 1,
+    online_security == "No" ~ 0
+    ),online_backup2 = case_when(
+    online_backup == "Yes" ~ 1,
+    online_backup == "No" ~ 0
+    ),device_protection2 = case_when(
+    device_protection == "Yes" ~ 1,
+    device_protection == "No" ~ 0
+  ),tech_support2 = case_when(
+    tech_support == "Yes" ~ 1,
+    tech_support == "No" ~ 0
+    ),streaming_tv2 = case_when(
+    streaming_tv == "Yes" ~ 1,
+    streaming_tv == "No" ~ 0
+    ),streaming_movies2 = case_when(
+    streaming_movies == "Yes" ~ 1,
+    streaming_movies == "No" ~ 0
+    ),paperless_billing2 = case_when(
+      paperless_billing == "Yes" ~ 1,
+      paperless_billing == "No" ~ 0
+    ))
+
+clean2 <- clean %>%  select(churn2, income, age, outage_sec_perweek, multiple2, online_security2, online_backup2, device_protection2, tech_support2, streaming_tv2, streaming_movies2, yearly_equip_failure, paperless_billing2)
+
+
+train <- clean2[1:7500,]
+test <- clean2[7501:10000,]
+```
+
+```{r}
+pander(favstats(train$churn2))
+pander(favstats(train$income))
+pander(favstats(train$age))
+pander(favstats(train$outage_sec_perweek))
+pander(favstats(train$multiple2))
+pander(favstats(train$online_security2))
+pander(favstats(train$online_backup2))
+pander(favstats(train$device_protection2))
+pander(favstats(train$tech_support2))
+pander(favstats(train$streaming_tv2))
+pander(favstats(train$streaming_movies2))
+pander(favstats(train$yearly_equip_failure))
+pander(favstats(train$paperless_billing2))
+
+par(mfrow=c(1,3))
+for(i in 1:13) {
+  hist(train[,i], main = names(train[i]))
+}
+
+for(i in 1:13) {
+  boxplot(train[,i], main = names(train[i]))
+}
+
+par(mfrow = c(1,1))
+missmap(train, col=c("blue", "red"), legend=FALSE)
+```
+
+```{r}
+model <- glm(churn2 ~.,family=binomial(link='logit'),data=test)
+
+pander(summary(model))
+```
+
+```{r}
+glm.probs <- predict(model,type = "response")
+pander(glm.probs[1:5])
+
+glm.pred <- ifelse(glm.probs > 0.1, "Up", "Down")
+
+attach(test)
+
+pander(table(glm.pred, churn2))
+
+pander((131+1902)/(1902+18+449+131))
+
+``` 
+
+```{r}
+test2 <- test %>% select(churn2, multiple2, online_security2, online_backup2, device_protection2, tech_support2, streaming_tv2, streaming_movies2)
+
+model2 <- glm(churn2 ~.,family=binomial(link='logit'),data=test2)
+
+pander(summary(model2))
+```
+
+```{r}
+glm.probs2 <- predict(model2,type = "response")
+pander(glm.probs2[1:5])
+
+glm.pred2 <- ifelse(glm.probs2 > 0.1, "Up", "Down")
+
+attach(test)
+
+pander(table(glm.pred2, churn2))
+
+pander((1912+129)/(1912+20+439+129))
+
+``` 
+
+$$ y_{churn} = -8.545 + 0.6963x_{Multiple Lines} + 0.6034x_{Online Backup} + 0.4657xc_{Device Protection} + 3.261x_{Streaming TV} + 2.991x_{Streaming Movies} $$
+

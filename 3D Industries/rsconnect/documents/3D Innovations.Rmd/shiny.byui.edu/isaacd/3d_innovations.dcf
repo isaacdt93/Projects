@@ -1,0 +1,12 @@
+name: 3d_innovations
+title: 3D Innovations
+username: isaacd
+account: isaacd
+server: shiny.byui.edu
+hostUrl: https://shiny.byui.edu/__api__
+appId: 614
+bundleId: 1050
+url: https://shiny.byui.edu/content/614/
+when: 1554424484.76882
+asMultiple: FALSE
+asStatic: TRUE
