@@ -20,18 +20,8 @@ library(mosaic)
 library(tidyverse)
 library(janitor)
 library(pander)
-
-#library(DT)
-#library(smbinning)
-#library(plyr)
-#library(corrplot)
 library(ggplot2)
 library(gridExtra)
-#library(ggthemes)
-#library(caret)
-#library(MASS)
-#library(randomForest)
-#library(party)
 
 raw_data <- read.csv("C:/Users/Dillon/Desktop/WGU Classes/WGU_classes/D206/medical_raw_data.csv")
 
